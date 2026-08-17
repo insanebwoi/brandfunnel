@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/brand-logo.png" alt="Brand Funnel Logo" width="160" />
+</p>
+
 # 🚀 Brand Funnel
 
 > **Precision 5-Stage Domain & Social Identity Intelligence Engine**

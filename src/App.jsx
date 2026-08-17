@@ -7,6 +7,8 @@ import LandingPage from './components/LandingPage.jsx'
 import GuidePage from './components/GuidePage.jsx'
 import PrivacyPage from './components/PrivacyPage.jsx'
 import {
+  BrandLogo,
+  BrandLogoSVG,
   SearchIcon,
   ZapIcon,
   SparklesIcon,
@@ -320,7 +322,7 @@ export default function App() {
       <header className="header">
         <div className="header-logo" onClick={() => navigateTo('landing')} style={{ cursor: 'pointer' }}>
           <div className="header-logo-mark">
-            <SearchIcon size={15} />
+            <BrandLogo size={24} />
           </div>
           <div>
             <div className="header-title">Brand Funnel</div>

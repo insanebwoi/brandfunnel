@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import {
+  BrandLogo,
   GlobeIcon,
   InstagramIcon,
   YouTubeIcon,
@@ -79,7 +80,7 @@ export function ArchitectureOrbit() {
           <div className="core-pulse-ring ring-2" />
           <div className="core-pulse-ring ring-3" />
           <div className="core-center-badge">
-            <ZapIcon size={24} className="core-zap" />
+            <BrandLogo size={42} style={{ marginBottom: 4 }} />
             <span className="core-text">CASCADE CORE</span>
             <span className="core-sub">5-Stage Engine</span>
           </div>
@@ -116,43 +117,51 @@ export function ArchitectureOrbit() {
           })}
         </div>
 
-        <svg className="orbit-laser-svg" viewBox="0 0 600 400" preserveAspectRatio="none">
-          <line x1="300" y1="200" x2="300" y2="40" className="laser-line" />
-          <line x1="300" y1="200" x2="520" y2="100" className="laser-line" />
-          <line x1="300" y1="200" x2="520" y2="300" className="laser-line" />
-          <line x1="300" y1="200" x2="300" y2="360" className="laser-line" />
-          <line x1="300" y1="200" x2="80" y2="300" className="laser-line" />
-          <line x1="300" y1="200" x2="80" y2="100" className="laser-line" />
+        {/* Laser Connections */}
+        <svg className="orbit-laser-svg" viewBox="0 0 780 440">
+          <line x1="390" y1="220" x2="390" y2="50" className="laser-line" />
+          <line x1="390" y1="220" x2="650" y2="100" className="laser-line" />
+          <line x1="390" y1="220" x2="650" y2="340" className="laser-line" />
+          <line x1="390" y1="220" x2="390" y2="390" className="laser-line" />
+          <line x1="390" y1="220" x2="130" y2="340" className="laser-line" />
+          <line x1="390" y1="220" x2="130" y2="100" className="laser-line" />
         </svg>
       </div>
 
-      {/* ── MOBILE ADAPTIVE FLOW GRID (< 768px) ── */}
+      {/* ── MOBILE RESPONSIVE PROTOCOL GRID ── */}
       <div className="mobile-architecture-grid">
         <div className="mobile-core-card">
           <div className="mobile-core-icon">
-            <ZapIcon size={20} />
+            <BrandLogo size={28} />
           </div>
           <div>
-            <div className="mobile-core-title">Central Cascade Core</div>
-            <div className="mobile-core-sub">Zero-Server Client-Side Mesh Engine</div>
+            <div className="mobile-core-title">Cascade Core Engine</div>
+            <div className="mobile-core-sub">5-Stage Sequential Pipeline</div>
           </div>
-          <span className="mobile-core-tag">5 STAGES</span>
+          <div className="mobile-core-tag">Active Engine</div>
         </div>
 
         <div className="mobile-nodes-list">
           {nodes.map((node) => {
             const IconComponent = node.icon
             return (
-              <div key={node.id} className="mobile-node-item" style={{ '--accent-c': node.color }}>
-                <div className="mobile-node-icon" style={{ color: node.color, background: `${node.color}15`, borderColor: `${node.color}30` }}>
-                  <IconComponent size={16} />
+              <div key={node.id} className="mobile-node-item">
+                <div
+                  className="mobile-node-icon"
+                  style={{
+                    background: `${node.color}15`,
+                    color: node.color,
+                    borderColor: `${node.color}30`,
+                  }}
+                >
+                  <IconComponent size={15} />
                 </div>
                 <div className="mobile-node-text">
                   <div className="mobile-node-title">{node.title}</div>
                   <div className="mobile-node-sub">{node.sub}</div>
                 </div>
                 <div className="mobile-node-badge">
-                  <CheckIcon size={10} style={{ marginRight: 2 }} />
+                  <CheckIcon size={10} style={{ display: 'inline', marginRight: 3 }} />
                   {node.status}
                 </div>
               </div>

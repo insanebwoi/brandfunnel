@@ -1,6 +1,68 @@
 /**
- * Clean SVG Icon System — Zero emoji, modern 2026 precision line icons.
+ * Clean SVG Icon System & Brand Assets — Zero emoji, modern 2026 precision line icons.
  */
+
+export function BrandLogo({ className = '', size = 28, style }) {
+  return (
+    <img
+      src="/brand-logo.png"
+      alt="Brand Funnel"
+      width={size}
+      height={size}
+      className={className}
+      style={{
+        objectFit: 'contain',
+        display: 'inline-block',
+        verticalAlign: 'middle',
+        borderRadius: '6px',
+        ...style,
+      }}
+    />
+  )
+}
+
+export function BrandLogoSVG({ className = '', size = 28, style }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 512 512" fill="none" className={className} style={style}>
+      <defs>
+        <linearGradient id="nLeft" x1="20%" y1="0%" x2="80%" y2="100%">
+          <stop offset="0%" stopColor="#00D2FF" />
+          <stop offset="60%" stopColor="#0066FF" />
+          <stop offset="100%" stopColor="#0047E0" />
+        </linearGradient>
+        <linearGradient id="nDiag" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00A3FF" />
+          <stop offset="50%" stopColor="#0052FF" />
+          <stop offset="100%" stopColor="#4F46E5" />
+        </linearGradient>
+        <linearGradient id="nRight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#8B5CF6" />
+          <stop offset="50%" stopColor="#7C3AED" />
+          <stop offset="100%" stopColor="#6D28D9" />
+        </linearGradient>
+        <linearGradient id="badgeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#00A3FF" />
+          <stop offset="50%" stopColor="#0066FF" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+        <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#4F46E5" />
+          <stop offset="100%" stopColor="#7C3AED" />
+        </linearGradient>
+        <filter id="bShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="#002288" floodOpacity="0.35" />
+        </filter>
+      </defs>
+      <path d="M 330 90 C 365 90, 390 115, 390 150 L 390 270 C 360 250, 330 260, 300 280 L 300 150 C 300 115, 310 90, 330 90 Z" fill="url(#nRight)" />
+      <path d="M 175 75 C 225 75, 260 105, 310 155 L 345 195 L 260 410 C 230 445, 190 445, 160 410 C 135 380, 125 340, 125 290 L 125 145 C 125 105, 145 75, 175 75 Z" fill="url(#nLeft)" />
+      <path d="M 175 75 C 230 75, 275 115, 360 220 C 335 255, 300 260, 270 220 L 180 120 C 150 90, 155 75, 175 75 Z" fill="url(#nDiag)" opacity="0.9" />
+      <rect x="345" y="330" width="38" height="105" rx="19" transform="rotate(-45 345 330)" fill="url(#handleGrad)" filter="url(#bShadow)" />
+      <circle cx="315" cy="300" r="86" fill="url(#badgeRing)" filter="url(#bShadow)" />
+      <circle cx="315" cy="300" r="64" fill="#FFFFFF" />
+      <path d="M 285 302 L 305 322 L 348 274" stroke="#0066FF" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
 
 export function SearchIcon({ className = '', size = 16, style }) {
   return (

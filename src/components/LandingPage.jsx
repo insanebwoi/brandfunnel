@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import {
+  BrandLogo,
+  BrandLogoSVG,
   SearchIcon,
   ZapIcon,
   GlobeIcon,
@@ -145,7 +147,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
         <RevealOnScroll delay={50}>
           <div className="hero-badge">
             <span className="hero-badge-pulse" />
-            <SparklesIcon size={13} className="hero-badge-icon" />
+            <BrandLogo size={15} style={{ marginRight: 4 }} />
             <span>2026 PRECISION BRAND INTELLIGENCE</span>
           </div>
         </RevealOnScroll>
@@ -632,7 +634,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
           <div className="footer-left">
             <div className="footer-brand">
               <div className="footer-logo-badge">
-                <SearchIcon size={14} />
+                <BrandLogo size={18} />
               </div>
               <span className="footer-logo-text">Brand Funnel</span>
             </div>
