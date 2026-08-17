@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "rewrites": [
+    { "source": "/api/godaddy/:path*", "destination": "https://api.godaddy.com/:path*" },
+    { "source": "/api/instagram/:path*", "destination": "https://www.instagram.com/:path*" },
+    { "source": "/api/youtube/:path*", "destination": "https://www.youtube.com/:path*" },
+    { "source": "/api/twitter/:path*", "destination": "https://x.com/:path*" },
+    { "source": "/api/facebook/:path*", "destination": "https://www.facebook.com/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
