@@ -24,15 +24,6 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      // GoDaddy API — forwards Authorization header from client
-      '/api/godaddy': {
-        target: 'https://api.godaddy.com',
-        changeOrigin: true,
-        rewrite: path => path.replace(/^\/api\/godaddy/, ''),
-        configure: proxy => {
-          proxy.on('error', err => console.error('[proxy:godaddy]', err.message))
-        },
-      },
       // Social platform proxies
       '/api/instagram': socialProxy('/api/instagram', 'https://www.instagram.com'),
       '/api/youtube':   socialProxy('/api/youtube',   'https://www.youtube.com'),

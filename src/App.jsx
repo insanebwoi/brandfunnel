@@ -134,7 +134,7 @@ export default function App() {
   async function handleCheck() {
     if (state.status === 'running') return
     setFilter(false)
-    await run(input, settings.pat, settings.tlds, settings)
+    await run(input, settings.tlds, settings)
   }
 
   function handleReset() {
@@ -149,7 +149,6 @@ export default function App() {
     updateSettings({ theme: next })
   }
 
-  const hasPat     = !!settings.pat
   const isRunning  = state.status === 'running'
   const isDone     = state.status === 'done' || state.status === 'stopped'
   const isError    = state.status === 'error'
@@ -322,15 +321,12 @@ export default function App() {
                 Only surviving available names advance to <strong>Instagram</strong>, then <strong>YouTube</strong>,
                 <strong>Twitter / X</strong>, and <strong>Facebook</strong>.
               </div>
-              {!hasPat && (
-                <div className="state-hint">
-                  <ShieldIcon size={16} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span>
-                    <strong>Authoritative Live DNS Active:</strong> You can run checks immediately.
-                    Optional: Add your GoDaddy PAT in <strong>Settings</strong> for official registry price estimates.
-                  </span>
-                </div>
-              )}
+              <div className="state-hint">
+                <ShieldIcon size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+                <span>
+                  <strong>Authoritative Live DNS Active:</strong> Checks run instantly via Google &amp; Cloudflare DoH with ICANN RDAP verification. Zero API keys required.
+                </span>
+              </div>
             </>
           )}
         </div>
@@ -405,8 +401,8 @@ export default function App() {
           </button>
 
           <div className="pat-badge">
-            <span className={`pat-dot${hasPat ? ' ok' : ' missing'}`} />
-            {hasPat ? 'API connected' : 'DNS Live Mode'}
+            <span className="pat-dot ok" />
+            DNS Engine Live
           </div>
 
           <button

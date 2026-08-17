@@ -2,7 +2,7 @@
  * useChecker — Sequential pipeline checker with smart resilience
  *
  * Workflow:
- *  1. Check ALL names against GoDaddy / DNS DoH domains
+ *  1. Check ALL names against Authoritative Live DNS DoH domains
  *     • survivors = names with ≥1 available domain
  *     • 0 survivors → STOP immediately
  *  2. Check survivors on Instagram (using web_profile_info 404/200 detection)
@@ -13,7 +13,7 @@
  *  5. Check survivors on Facebook
  */
 import { useState, useCallback } from 'react'
-import { checkDomainsBatch } from '../api/godaddy.js'
+import { checkDomainsBatch } from '../api/domain.js'
 import { checkSocialBatch } from '../api/social.js'
 import { SOCIAL_PLATFORMS } from './useSettings.js'
 import { parseInput, buildCheckPlan } from './parserUtils.js'
@@ -40,7 +40,7 @@ function isSurvivor(socialResult) {
 export function useChecker() {
   const [state, setState] = useState(IDLE_STATE)
 
-  const run = useCallback(async (rawInput, pat, tlds, settings) => {
+  const run = useCallback(async (rawInput, tlds, settings) => {
     const tokens = parseInput(rawInput)
     if (!tokens.length) {
       setState(s => ({ ...s, status: 'error', error: 'Enter at least one name to check.' }))
@@ -109,7 +109,7 @@ export function useChecker() {
       stages.map(s => s.id === id ? { ...s, ...patch } : s)
 
     // ════════════════════════════════════════════════════════
-    // STAGE 1 — DOMAIN CHECK (GoDaddy + DoH Auto-Fallback)
+    // STAGE 1 — DOMAIN CHECK (Authoritative Live DNS)
     // ════════════════════════════════════════════════════════
     let stages = updateStage(allStages, 'domain', { status: 'running' })
 
@@ -128,7 +128,7 @@ export function useChecker() {
 
     let domainResults
     try {
-      domainResults = await checkDomainsBatch(allFqdns, pat, (done) => {
+      domainResults = await checkDomainsBatch(allFqdns, (done) => {
         setState(s => ({
           ...s,
           progress:     Math.round((done / allFqdns.length) * 100),
@@ -136,19 +136,10 @@ export function useChecker() {
         }))
       })
     } catch {
-      // Fallback
       domainResults = new Map()
     }
 
-    // Check if any domain used DNS fallback due to 429
-    let fallbackCount = 0
-    for (const [, r] of domainResults) {
-      if (r?.fallbackUsed) fallbackCount++
-    }
-
-    const fallbackNotice = fallbackCount > 0
-      ? '⚡ GoDaddy API Rate Limit (429) detected — Verified accurately via Authoritative DNS / RDAP'
-      : (!pat?.trim() ? '⚡ Verified using Authoritative Live DNS' : null)
+    const fallbackNotice = '⚡ Verified using Authoritative Live DNS (Google & Cloudflare DoH + ICANN RDAP)'
 
     // Populate domain data
     for (const [baseName, plan] of nameMap) {

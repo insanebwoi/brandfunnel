@@ -3,7 +3,6 @@ import { useState, useCallback } from 'react'
 const STORAGE_KEY = 'brandchecker_settings_v2'
 
 const DEFAULTS = {
-  pat:            '',
   tlds:           ['.com', '.net', '.in', '.io'],
   // Social platforms
   checkInstagram: true,

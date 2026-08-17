@@ -55,7 +55,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
 
     setTimeout(() => {
       setSimStage(1)
-      setTerminalLog(prev => [...prev, `[STAGE 1] Querying GoDaddy Registry for ${simName || 'brand'}.com -> FREE`])
+      setTerminalLog(prev => [...prev, `[STAGE 1] Querying Authoritative DNS for ${simName || 'brand'}.com -> FREE`])
     }, 400)
 
     setTimeout(() => {
@@ -81,8 +81,8 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
       a: 'Traditional multi-checker tools make parallel requests across all platforms at once. If a domain is already registered, querying social media platforms for that name is a wasted call. Brand Funnel only advances surviving names with at least one free domain, saving over 75% of outbound requests.',
     },
     {
-      q: 'Do I need a paid GoDaddy account to use this tool?',
-      a: 'No. You can generate a free Personal Access Token (PAT) from developer.godaddy.com with the read-only scope. If your token reaches its rate limit or if you choose not to provide one, the engine automatically switches to Authoritative DNS-over-HTTPS (DoH) and ICANN RDAP verification with zero configuration.',
+      q: 'Do I need an API key or paid account to use this tool?',
+      a: 'No. Brand Funnel operates using Authoritative DNS-over-HTTPS (Google & Cloudflare DoH) and ICANN RDAP verification. It works 100% out-of-the-box with zero configuration and zero API keys needed.',
     },
     {
       q: 'Where are my API tokens and searched brand names stored?',
@@ -262,7 +262,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                       <GlobeIcon size={14} style={{ color: 'var(--avail)' }} />
                       <span>Domain Registry (.com / .io / .in)</span>
                     </div>
-                    <div className="funnel-step-sub">GoDaddy v3 / DoH Registry Lookup</div>
+                    <div className="funnel-step-sub">Authoritative Live DNS Lookup</div>
                   </div>
                 </div>
                 <div className="funnel-step-status pass">
@@ -404,11 +404,11 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
           <RevealOnScroll delay={100}>
             <TiltCard className="bento-card h-full">
               <div className="bento-icon-wrap" style={{ color: 'var(--accent-2)', background: 'var(--accent-bg)', borderColor: 'var(--accent-border)' }}>
-                <KeyIcon size={20} />
+                <GlobeIcon size={20} />
               </div>
-              <h3 className="bento-card-title">Official GoDaddy v3 API</h3>
+              <h3 className="bento-card-title">Authoritative DoH Resolution</h3>
               <p className="bento-card-desc">
-                Direct connection to GoDaddy&apos;s discovery endpoints for real-time registry check, definitive availability confirmation, and annual registration pricing.
+                Instant high-speed domain lookup powered directly by Google DNS &amp; Cloudflare DNS-over-HTTPS protocol endpoints.
               </p>
             </TiltCard>
           </RevealOnScroll>
@@ -419,9 +419,9 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
               <div className="bento-icon-wrap" style={{ color: '#06B6D4', background: 'rgba(6, 182, 212, 0.1)', borderColor: 'rgba(6, 182, 212, 0.25)' }}>
                 <CpuIcon size={20} />
               </div>
-              <h3 className="bento-card-title">Authoritative DoH Fallback</h3>
+              <h3 className="bento-card-title">ICANN RDAP Verification</h3>
               <p className="bento-card-desc">
-                If your GoDaddy token experiences rate limits (HTTP 429) or is omitted, the engine automatically resolves availability using Google &amp; Cloudflare DNS-over-HTTPS.
+                Definitive registrar confirmation via official ICANN Registration Data Access Protocol (RDAP) standards.
               </p>
             </TiltCard>
           </RevealOnScroll>
@@ -651,12 +651,12 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
               API Setup Guide
             </button>
             <a
-              href="https://developer.godaddy.com/docs/api-users/domains/search"
+              href="https://rdap.org"
               target="_blank"
               rel="noopener noreferrer"
               className="footer-link-btn"
             >
-              GoDaddy Registry Docs <ExternalLinkIcon size={11} style={{ display: 'inline', marginLeft: 2 }} />
+              ICANN RDAP Specs <ExternalLinkIcon size={11} style={{ display: 'inline', marginLeft: 2 }} />
             </a>
           </div>
         </div>

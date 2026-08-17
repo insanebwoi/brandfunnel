@@ -1,10 +1,8 @@
 import {
   ShieldIcon,
-  KeyIcon,
   GlobeIcon,
-  SparklesIcon,
   ArrowRightIcon,
-  ExternalLinkIcon,
+  CheckIcon,
 } from './Icons.jsx'
 
 export default function PrivacyPage({ onLaunchTool }) {
@@ -17,7 +15,7 @@ export default function PrivacyPage({ onLaunchTool }) {
         </div>
         <h1 className="doc-title">Client-Side Zero-Storage Architecture</h1>
         <p className="doc-subtitle">
-          How your GoDaddy API credentials, search keywords, and brand ideas are protected.
+          How your search keywords, candidate names, and brand ideas are protected.
         </p>
       </div>
 
@@ -29,17 +27,17 @@ export default function PrivacyPage({ onLaunchTool }) {
           </div>
           <div className="doc-card-body">
             <p>
-              Unlike traditional SaaS naming platforms that log your unreleased brand names and search histories, Brand Funnel executes the entire orchestration logic in your client browser.
+              Unlike traditional SaaS naming platforms that log your unreleased brand names and search histories, Brand Funnel executes the entire orchestration logic directly in your browser.
             </p>
             <ul className="doc-list">
               <li>
-                <strong>No Central Database:</strong> We run no user database, no analytics trackers, and no idea logging.
+                <strong>No Central Database:</strong> We operate no user database, no analytics trackers, and no idea logging.
               </li>
               <li>
-                <strong>Local Storage Only:</strong> Your GoDaddy Personal Access Token (PAT) and configuration preferences live in your local browser&apos;s <code>localStorage</code>.
+                <strong>Local Storage Only:</strong> Only your UI appearance theme preference lives in your browser&apos;s <code>localStorage</code>.
               </li>
               <li>
-                <strong>Direct API Dispatch:</strong> Requests are forwarded directly to GoDaddy&apos;s API gateway via local reverse proxy with standard HTTPS encryption.
+                <strong>Zero Credentials Required:</strong> No API keys or tokens are stored, transmitted, or required to perform full domain and social availability checks.
               </li>
             </ul>
           </div>
@@ -47,25 +45,22 @@ export default function PrivacyPage({ onLaunchTool }) {
 
         <section className="doc-card">
           <div className="doc-card-header">
-            <KeyIcon size={18} className="doc-card-icon" style={{ color: 'var(--accent)' }} />
-            <h2 className="doc-card-title">Token Permissions &amp; Best Practices</h2>
+            <GlobeIcon size={18} className="doc-card-icon" style={{ color: 'var(--accent)' }} />
+            <h2 className="doc-card-title">Direct Public Protocol Inspection</h2>
           </div>
           <div className="doc-card-body">
             <p>
-              For maximum security, we recommend following the principle of least privilege:
+              All queries are dispatched over secure encrypted connections (HTTPS) to public DNS-over-HTTPS &amp; ICANN RDAP endpoints:
             </p>
             <ul className="doc-list">
               <li>
-                Use read-only scope <code>domains.domain:read</code> for your PAT.
+                <strong>Google &amp; Cloudflare DoH:</strong> Queries standard public DNS records using official Google &amp; Cloudflare DoH APIs.
               </li>
               <li>
-                Never use a key that has purchase, DNS modification, or account administration permissions.
+                <strong>ICANN RDAP:</strong> Validates domain registration states via standard open registry RDAP services.
               </li>
               <li>
-                You can revoke or regenerate your PAT anytime at{' '}
-                <a href="https://developer.godaddy.com/keys" target="_blank" rel="noopener noreferrer" className="doc-link">
-                  developer.godaddy.com/keys <ExternalLinkIcon size={11} style={{ display: 'inline' }} />
-                </a>.
+                <strong>No Intermediary SaaS:</strong> Candidate names never pass through third-party branding servers or domain squatting databases.
               </li>
             </ul>
           </div>

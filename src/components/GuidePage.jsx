@@ -1,72 +1,55 @@
 import {
-  KeyIcon,
+  GlobeIcon,
   ZapIcon,
   ShieldIcon,
-  GlobeIcon,
   SparklesIcon,
   ArrowRightIcon,
-  CheckIcon,
   AlertCircleIcon,
-  SettingsIcon,
-  ExternalLinkIcon,
+  CpuIcon,
 } from './Icons.jsx'
 
-export default function GuidePage({ onLaunchTool, onOpenSettings }) {
+export default function GuidePage({ onLaunchTool }) {
   return (
     <div className="doc-page-container">
       <div className="doc-header">
         <div className="doc-badge">
           <SparklesIcon size={12} style={{ display: 'inline', marginRight: 4 }} />
-          TECHNICAL ARCHITECTURE &amp; SETUP
+          TECHNICAL ARCHITECTURE &amp; GUIDE
         </div>
-        <h1 className="doc-title">GoDaddy API &amp; Social Engine Guide</h1>
+        <h1 className="doc-title">DNS Engine &amp; Social Cascade Guide</h1>
         <p className="doc-subtitle">
-          Everything you need to know about setting up your API key, rate limits, supported TLDs, and sequential funnel cascade logic.
+          Everything you need to know about authoritative live DNS verification, supported TLDs, and sequential funnel cascade logic.
         </p>
       </div>
 
       <div className="doc-grid">
-        {/* ── STEP BY STEP GODADDY PAT SETUP ── */}
+        {/* ── AUTHORITATIVE DNS & RDAP ARCHITECTURE ── */}
         <section className="doc-card">
           <div className="doc-card-header">
-            <KeyIcon size={18} className="doc-card-icon" style={{ color: 'var(--accent)' }} />
-            <h2 className="doc-card-title">1. Getting Your GoDaddy PAT (Personal Access Token)</h2>
+            <GlobeIcon size={18} className="doc-card-icon" style={{ color: 'var(--accent)' }} />
+            <h2 className="doc-card-title">1. Authoritative DNS &amp; RDAP Architecture</h2>
           </div>
           <div className="doc-card-body">
             <p>
-              Brand Funnel connects directly to the official <strong>GoDaddy v3 Discovery REST API</strong> to perform bulk domain checks with live registry pricing.
+              Brand Funnel resolves domain availability in real-time using high-availability <strong>DNS-over-HTTPS (DoH)</strong> endpoints from Google DNS and Cloudflare DNS, backed by ICANN RDAP protocols.
             </p>
 
-            <ol className="doc-steps-list">
+            <ul className="doc-list">
               <li>
-                <strong>Log into Developer Portal:</strong> Visit{' '}
-                <a href="https://developer.godaddy.com/keys" target="_blank" rel="noopener noreferrer" className="doc-link">
-                  developer.godaddy.com/keys <ExternalLinkIcon size={11} style={{ display: 'inline' }} />
-                </a>
+                <strong>Zero Configuration Needed:</strong> No API keys, personal access tokens (PAT), or registrar credentials are required.
               </li>
               <li>
-                <strong>Create Key:</strong> Click the <strong>&quot;Create New Key&quot;</strong> or <strong>&quot;Personal Access Tokens&quot;</strong> button.
+                <strong>High Reliability:</strong> Primary checks verify authoritative Name Server (NS) records. Status 3 (NXDOMAIN) indicates a free domain, while Status 0 indicates registered ownership.
               </li>
               <li>
-                <strong>Select Scopes:</strong> Choose the <code>domains.domain:read</code> scope (read-only search permission, no credit card or billing risk).
+                <strong>ICANN RDAP Fallback:</strong> Secondary validation against official registry RDAP servers ensures definitive registration status.
               </li>
-              <li>
-                <strong>Copy Token:</strong> Copy your token string (e.g. <code>gd_pat_...</code>).
-              </li>
-              <li>
-                <strong>Save in App:</strong> Click{' '}
-                <button className="doc-inline-btn" onClick={onOpenSettings}>
-                  <SettingsIcon size={12} style={{ display: 'inline', marginRight: 3 }} />
-                  Settings
-                </button>{' '}
-                and paste your token into the field.
-              </li>
-            </ol>
+            </ul>
 
             <div className="doc-callout info">
               <ShieldIcon size={16} className="doc-callout-icon" />
               <div>
-                <strong>Zero Storage Guarantee:</strong> Your key is stored exclusively in your local browser storage (<code>localStorage</code>) and is sent with Bearer Authorization only for GoDaddy availability checks.
+                <strong>Zero-Storage Guarantee:</strong> All DNS and social queries originate directly from your browser with zero remote database logging.
               </div>
             </div>
           </div>
@@ -91,7 +74,7 @@ export default function GuidePage({ onLaunchTool, onOpenSettings }) {
               </div>
               <div className="flow-arrow">→</div>
               <div className="flow-node">
-                <strong>Stage 1: GoDaddy Domains</strong>
+                <strong>Stage 1: DNS Domains</strong>
                 <span>Checks all selected TLDs</span>
               </div>
               <div className="flow-arrow">→</div>
@@ -120,19 +103,19 @@ export default function GuidePage({ onLaunchTool, onOpenSettings }) {
           </div>
         </section>
 
-        {/* ── RATE LIMITS & BEST PRACTICES ── */}
+        {/* ── PERFORMANCE & BEST PRACTICES ── */}
         <section className="doc-card">
           <div className="doc-card-header">
-            <GlobeIcon size={18} className="doc-card-icon" style={{ color: '#06B6D4' }} />
-            <h2 className="doc-card-title">3. Rate Limits &amp; Auto-Fallback Resilience</h2>
+            <CpuIcon size={18} className="doc-card-icon" style={{ color: '#06B6D4' }} />
+            <h2 className="doc-card-title">3. High Performance &amp; Social Throttling</h2>
           </div>
           <div className="doc-card-body">
             <p>
-              GoDaddy enforces rate limits per token on discovery endpoints.
+              The DNS engine handles bulk concurrency seamlessly while respecting downstream network limits.
             </p>
             <ul className="doc-list">
               <li>
-                <strong>Authoritative DoH Fallback:</strong> If your token hits HTTP 429 (Rate Limited), the engine automatically falls back to Google and Cloudflare DNS-over-HTTPS (DoH) so you are never blocked.
+                <strong>Parallel DoH Batches:</strong> Domain checks process in concurrent micro-batches for sub-second verification.
               </li>
               <li>
                 <strong>Social Throttling:</strong> Social requests are interleaved with safe delays to prevent network rate limits.

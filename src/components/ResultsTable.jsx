@@ -260,7 +260,7 @@ export default function ResultsTable({
       {/* Pipeline Stepper Visualizer */}
       <PipelineStepper stages={stages} />
 
-      {/* Fallback Notice if GoDaddy API returned 429 */}
+      {/* Live DNS Status Notice */}
       {fallbackNotice && (
         <div className="fallback-notice-banner">
           <ZapIcon size={14} className="fallback-notice-icon" />

@@ -16,9 +16,9 @@ export function ArchitectureOrbit() {
 
   const nodes = [
     {
-      id: 'godaddy',
-      title: 'GoDaddy Registry',
-      sub: 'Authoritative Domain & Pricing',
+      id: 'dns-gateway',
+      title: 'Authoritative DNS',
+      sub: 'Google & Cloudflare DoH Gateway',
       status: 'Ready',
       icon: GlobeIcon,
       color: '#10B981',
