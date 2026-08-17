@@ -82,7 +82,36 @@ export default function App() {
   }, [])
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', settings.theme || 'auto')
+    const applyTheme = () => {
+      const mode = settings.theme || 'auto'
+      if (mode === 'dark' || mode === 'light') {
+        document.documentElement.setAttribute('data-theme', mode)
+        document.documentElement.setAttribute('data-theme-mode', mode)
+      } else {
+        const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light')
+        document.documentElement.setAttribute('data-theme-mode', 'auto')
+      }
+    }
+
+    applyTheme()
+
+    if (window.matchMedia) {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      const handleChange = () => {
+        if ((settings.theme || 'auto') === 'auto') {
+          applyTheme()
+        }
+      }
+
+      if (mediaQuery.addEventListener) {
+        mediaQuery.addEventListener('change', handleChange)
+        return () => mediaQuery.removeEventListener('change', handleChange)
+      } else if (mediaQuery.addListener) {
+        mediaQuery.addListener(handleChange)
+        return () => mediaQuery.removeListener(handleChange)
+      }
+    }
   }, [settings.theme])
 
   useEffect(() => {
