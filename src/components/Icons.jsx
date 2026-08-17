@@ -25,32 +25,31 @@ export function BrandLogoSVG({ className = '', size = 28, style }) {
   return (
     <svg width={size} height={size} viewBox="0 0 512 512" fill="none" className={className} style={style}>
       <defs>
-        <linearGradient id="nLeft" x1="20%" y1="0%" x2="80%" y2="100%">
-          <stop offset="0%" stopColor="#00D2FF" />
-          <stop offset="60%" stopColor="#0066FF" />
-          <stop offset="100%" stopColor="#0047E0" />
+        <linearGradient id="nLeft" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2563EB" />
+          <stop offset="50%" stopColor="#1D4ED8" />
+          <stop offset="100%" stopColor="#1E40AF" />
         </linearGradient>
         <linearGradient id="nDiag" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00A3FF" />
-          <stop offset="50%" stopColor="#0052FF" />
-          <stop offset="100%" stopColor="#4F46E5" />
+          <stop offset="0%" stopColor="#3B82F6" />
+          <stop offset="50%" stopColor="#06B6D4" />
+          <stop offset="100%" stopColor="#10B981" />
         </linearGradient>
-        <linearGradient id="nRight" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#8B5CF6" />
-          <stop offset="50%" stopColor="#7C3AED" />
-          <stop offset="100%" stopColor="#6D28D9" />
+        <linearGradient id="nRight" x1="0%" y1="100%" x2="0%" y2="0%">
+          <stop offset="0%" stopColor="#06B6D4" />
+          <stop offset="100%" stopColor="#10B981" />
         </linearGradient>
         <linearGradient id="badgeRing" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#00A3FF" />
-          <stop offset="50%" stopColor="#0066FF" />
-          <stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="#1D4ED8" />
+          <stop offset="50%" stopColor="#0284C7" />
+          <stop offset="100%" stopColor="#06B6D4" />
         </linearGradient>
         <linearGradient id="handleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#4F46E5" />
-          <stop offset="100%" stopColor="#7C3AED" />
+          <stop offset="0%" stopColor="#0284C7" />
+          <stop offset="100%" stopColor="#1D4ED8" />
         </linearGradient>
         <filter id="bShadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="#002288" floodOpacity="0.35" />
+          <feDropShadow dx="0" dy="6" stdDeviation="10" floodColor="#002288" floodOpacity="0.30" />
         </filter>
       </defs>
       <path d="M 330 90 C 365 90, 390 115, 390 150 L 390 270 C 360 250, 330 260, 300 280 L 300 150 C 300 115, 310 90, 330 90 Z" fill="url(#nRight)" />
@@ -59,7 +58,7 @@ export function BrandLogoSVG({ className = '', size = 28, style }) {
       <rect x="345" y="330" width="38" height="105" rx="19" transform="rotate(-45 345 330)" fill="url(#handleGrad)" filter="url(#bShadow)" />
       <circle cx="315" cy="300" r="86" fill="url(#badgeRing)" filter="url(#bShadow)" />
       <circle cx="315" cy="300" r="64" fill="#FFFFFF" />
-      <path d="M 285 302 L 305 322 L 348 274" stroke="#0066FF" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M 285 302 L 305 322 L 348 274" stroke="#10B981" strokeWidth="18" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }
