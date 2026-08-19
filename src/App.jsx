@@ -30,6 +30,8 @@ import {
   MoonIcon,
   AutoThemeIcon,
   RefreshIcon,
+  GlobeIcon,
+  CopyIcon,
   InstagramIcon,
   YouTubeIcon,
   TwitterIcon,
