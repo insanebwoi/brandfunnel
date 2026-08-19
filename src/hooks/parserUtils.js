@@ -7,12 +7,17 @@ export function parseInput(raw) {
   return [...new Set(
     raw
       .split(/[\n,]+/)
-      .map(s => s.trim().toLowerCase()
-        .replace(/^https?:\/\/(?:www\.)?/, '')
-        .replace(/\/$/, '')
-        .replace(/^#.*/, '')  // ignore comment lines
-      )
-      .filter(s => /^[a-z0-9]/.test(s))
+      .map(s => {
+        let clean = s.trim().toLowerCase()
+        if (clean.startsWith('#')) return ''
+        clean = clean
+          .replace(/^https?:\/\/(?:www\.)?/, '')
+          .replace(/\/$/, '')
+          .replace(/\s+/g, '') // remove spaces inside tokens (e.g. "names to check" -> "namestocheck")
+          .replace(/[^a-z0-9._-]/g, '') // keep valid handle/domain chars
+        return clean
+      })
+      .filter(s => s.length >= 2 && /^[a-z0-9]/.test(s))
   )]
 }
 
@@ -38,3 +43,4 @@ export function buildCheckPlan(tokens, tlds) {
 
   return nameMap
 }
+

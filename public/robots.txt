@@ -1,0 +1,17 @@
+# Robots.txt for Brand Funnel
+User-agent: *
+Allow: /
+Allow: /#brand-name-checker
+Allow: /#business-name-checker
+Allow: /#domain-name-checker
+Allow: /#trademark-checker
+Allow: /#social-handle-checker
+Allow: /#brand-name-generator
+Allow: /#methodology
+Allow: /#learn
+
+# System & API endpoints
+Disallow: /api/
+Disallow: /internal/
+
+Sitemap: https://brandfunnel.mopgen.in/sitemap.xml

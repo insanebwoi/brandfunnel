@@ -1,108 +1,103 @@
 /**
- * Domain Availability Engine — Authoritative Live DNS
+ * Domain Availability Engine — Ultra-Fast Authoritative Live DNS
  *
- * Uses Google & Cloudflare DNS-over-HTTPS (DoH) + ICANN RDAP
+ * Uses parallel Google & Cloudflare DNS-over-HTTPS (DoH) racing + ICANN RDAP
  * Zero API keys, zero rate limits, zero server dependencies.
  */
 
+const dnsCache = new Map()
+
+async function fetchGoogleDoH(clean, signal) {
+  const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(clean)}&type=NS`, {
+    headers: { 'Accept': 'application/json' },
+    signal,
+  })
+  if (!res.ok) throw new Error('Google DoH failed')
+  const data = await res.json()
+  if (data.Status === 3) {
+    return { fqdn: clean, available: true, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'dns' }
+  }
+  if (data.Status === 0 && (data.Answer?.length > 0 || data.Authority?.length > 0)) {
+    return { fqdn: clean, available: false, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'dns' }
+  }
+  throw new Error('Inconclusive Google DoH')
+}
+
+async function fetchCloudflareDoH(clean, signal) {
+  const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(clean)}&type=NS`, {
+    headers: { 'Accept': 'application/dns-json' },
+    signal,
+  })
+  if (!res.ok) throw new Error('Cloudflare DoH failed')
+  const data = await res.json()
+  if (data.Status === 3) {
+    return { fqdn: clean, available: true, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'dns' }
+  }
+  if (data.Status === 0) {
+    return { fqdn: clean, available: false, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'dns' }
+  }
+  throw new Error('Inconclusive Cloudflare DoH')
+}
+
 /**
- * Check domain via Google / Cloudflare DNS-over-HTTPS & ICANN RDAP
+ * Check domain via Google / Cloudflare DNS-over-HTTPS in parallel (fastest wins) & ICANN RDAP fallback
  * @param {string} fqdn
  * @returns {Promise<{fqdn: string, available: boolean, definitive: boolean, price: null, renewalPrice: null, currency: string, source: string}>}
  */
 export async function checkDomainViaDNS(fqdn) {
   const clean = fqdn.toLowerCase().trim()
-
-  try {
-    // 1. Primary DoH: Google DNS (Check NS record)
-    const res = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(clean)}&type=NS`, {
-      headers: { 'Accept': 'application/json' },
-    })
-
-    if (res.ok) {
-      const data = await res.json()
-      // Status 3 = NXDOMAIN (Domain does not exist -> Free!)
-      if (data.Status === 3) {
-        return {
-          fqdn: clean,
-          available: true,
-          definitive: true,
-          price: null,
-          renewalPrice: null,
-          currency: 'USD',
-          source: 'dns',
-        }
-      }
-
-      // Status 0 = NOERROR (Domain has DNS records -> Taken!)
-      if (data.Status === 0 && (data.Answer?.length > 0 || data.Authority?.length > 0)) {
-        return {
-          fqdn: clean,
-          available: false,
-          definitive: true,
-          price: null,
-          renewalPrice: null,
-          currency: 'USD',
-          source: 'dns',
-        }
-      }
-    }
-  } catch {
-    // Continue to fallback
+  if (dnsCache.has(clean)) {
+    return dnsCache.get(clean)
   }
 
+  // 1. Race Google & Cloudflare DoH concurrently for sub-100ms response
   try {
-    // 2. Backup DoH: Cloudflare DNS
-    const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(clean)}&type=NS`, {
-      headers: { 'Accept': 'application/dns-json' },
-    })
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 2000)
 
-    if (res.ok) {
-      const data = await res.json()
-      if (data.Status === 3) {
-        return {
-          fqdn: clean,
-          available: true,
-          definitive: true,
-          price: null,
-          renewalPrice: null,
-          currency: 'USD',
-          source: 'dns',
-        }
-      }
-      if (data.Status === 0) {
-        return {
-          fqdn: clean,
-          available: false,
-          definitive: true,
-          price: null,
-          renewalPrice: null,
-          currency: 'USD',
-          source: 'dns',
-        }
-      }
-    }
+    const fastResult = await Promise.any([
+      fetchGoogleDoH(clean, controller.signal),
+      fetchCloudflareDoH(clean, controller.signal),
+    ])
+    clearTimeout(timeoutId)
+    dnsCache.set(clean, fastResult)
+    return fastResult
   } catch {
-    // Continue to RDAP
+    // Both parallel DoH failed or timed out, continue to fallback
   }
 
+  // 2. Sequential fallback to Google DNS then Cloudflare DNS
   try {
-    // 3. Backup: ICANN RDAP
+    const result = await fetchGoogleDoH(clean)
+    dnsCache.set(clean, result)
+    return result
+  } catch {}
+
+  try {
+    const result = await fetchCloudflareDoH(clean)
+    dnsCache.set(clean, result)
+    return result
+  } catch {}
+
+  // 3. Backup: ICANN RDAP
+  try {
     const res = await fetch(`https://rdap.org/domain/${encodeURIComponent(clean)}`, {
       method: 'HEAD',
     })
     if (res.status === 404) {
-      return { fqdn: clean, available: true, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'rdap' }
+      const result = { fqdn: clean, available: true, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'rdap' }
+      dnsCache.set(clean, result)
+      return result
     }
     if (res.status === 200) {
-      return { fqdn: clean, available: false, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'rdap' }
+      const result = { fqdn: clean, available: false, definitive: true, price: null, renewalPrice: null, currency: 'USD', source: 'rdap' }
+      dnsCache.set(clean, result)
+      return result
     }
-  } catch {
-    // If all fail
-  }
+  } catch {}
 
   // Default fallback if unconfirmed
-  return {
+  const fallback = {
     fqdn: clean,
     available: true,
     definitive: false,
@@ -111,6 +106,8 @@ export async function checkDomainViaDNS(fqdn) {
     currency: 'USD',
     source: 'dns',
   }
+  dnsCache.set(clean, fallback)
+  return fallback
 }
 
 /**
@@ -123,16 +120,14 @@ export async function checkDomain(fqdn) {
 }
 
 /**
- * Batch-check multiple domains with concurrency control.
+ * Batch-check multiple domains with high concurrency control (16 parallel workers).
  *
  * @param {string[]} fqdns
  * @param {(done: number, total: number) => void} onProgress
  * @returns {Promise<Map<string, DomainResult>>}
  */
 export async function checkDomainsBatch(fqdns, onProgress) {
-  const CONCURRENCY = 6
-  const DELAY       = 100
-
+  const CONCURRENCY = 16
   const results = new Map()
   let done = 0
 
@@ -160,17 +155,14 @@ export async function checkDomainsBatch(fqdns, onProgress) {
         })
       }
       done++
-      onProgress?.(done, fqdns.length)
     })
 
+    onProgress?.(done, fqdns.length)
     if (i + CONCURRENCY < fqdns.length) {
-      await sleep(DELAY)
+      await new Promise(r => setTimeout(r, 10))
     }
   }
 
   return results
 }
 
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms))
-}

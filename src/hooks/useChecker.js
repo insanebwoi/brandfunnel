@@ -91,15 +91,42 @@ export function useChecker() {
         }
       })
 
+      const getInstaRank = (row) => {
+        const st = row.social?.instagram?.status
+        if (st === 'free') return 0       // Top priority: Instagram FREE
+        if (st === 'unknown') return 1    // Second priority: Instagram UNCONFIRMED
+        if (!st || st === 'pending') return 2
+        return 3                          // Lowest priority: Instagram TAKEN
+      }
+
       const stageRank = { domain: 0, instagram: 1, youtube: 2, twitter: 3, facebook: 4 }
+
       rows.sort((a, b) => {
+        // 1. All-Clear survivors first
         if (a.isAlive && !b.isAlive) return -1
         if (!a.isAlive && b.isAlive) return 1
+
+        // 2. Names with free domains first
+        if (a.hasAny && !b.hasAny) return -1
+        if (!a.hasAny && b.hasAny) return 1
+
+        // 3. Priority to MOST free domains first (descending count: 4 TLDs > 3 TLDs > 2 TLDs > 1 TLD)
+        const freeTldDiff = (b.availableTlds?.length || 0) - (a.availableTlds?.length || 0)
+        if (freeTldDiff !== 0) return freeTldDiff
+
+        // 4. Instagram availability priority (Free > Unconfirmed > Pending > Taken)
+        const instaA = getInstaRank(a)
+        const instaB = getInstaRank(b)
+        if (instaA !== instaB) return instaA - instaB
+
+        // 5. Later stage elimination priority
         if (!a.isAlive && !b.isAlive) {
           const ra = stageRank[a.eliminatedAt] ?? 99
           const rb = stageRank[b.eliminatedAt] ?? 99
           if (ra !== rb) return ra - rb
         }
+
+        // 6. Alphabetical tie-breaker
         return a.baseName.localeCompare(b.baseName)
       })
       return rows
@@ -149,10 +176,15 @@ export function useChecker() {
       }
     }
 
-    // Find domain survivors
-    let survivors = baseNames.filter(name =>
-      Object.values(nameData[name].domainCols).some(r => r?.ok && r?.available)
-    )
+    // Find domain survivors (Require ALL selected TLDs free if requireAllDomainsFree is true)
+    const requireAll = settings?.requireAllDomainsFree !== false
+    let survivors = baseNames.filter(name => {
+      const cols = Object.values(nameData[name].domainCols)
+      if (!cols.length) return false
+      return requireAll
+        ? cols.every(r => r?.ok && r?.available)
+        : cols.some(r => r?.ok && r?.available)
+    })
 
     // Mark domain failures
     for (const name of baseNames) {
@@ -165,6 +197,10 @@ export function useChecker() {
     })
 
     if (survivors.length === 0) {
+      const stopMsg = requireAll
+        ? `No candidate names have ALL selected domain TLDs free. Pruned downstream social checks.`
+        : `All ${baseNames.length} domain name${baseNames.length > 1 ? 's are' : ' is'} taken across selected TLDs. Nothing to check on social platforms.`
+
       setState(s => ({
         ...s,
         status:        'stopped',
@@ -173,7 +209,7 @@ export function useChecker() {
         stages,
         rows:          buildRows(survivors),
         fallbackNotice,
-        stopMessage:   `All ${baseNames.length} domain name${baseNames.length > 1 ? 's are' : ' is'} taken across selected TLDs. Nothing to check on social platforms.`,
+        stopMessage:   stopMsg,
       }))
       return
     }

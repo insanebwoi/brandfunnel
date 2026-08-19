@@ -3,14 +3,15 @@ import { useState, useCallback } from 'react'
 const STORAGE_KEY = 'brandchecker_settings_v2'
 
 const DEFAULTS = {
-  tlds:           ['.com', '.net', '.in', '.io'],
+  tlds:                  ['.com', '.net', '.in', '.io'],
+  requireAllDomainsFree: true, // Pass domain stage only if ALL selected TLDs are free
   // Social platforms
-  checkInstagram: true,
-  checkYoutube:   true,
-  checkTwitter:   true,
-  checkFacebook:  false,
+  checkInstagram:        true,
+  checkYoutube:          true,
+  checkTwitter:          true,
+  checkFacebook:         false,
   // Appearance
-  theme:          'auto',   // 'auto' | 'light' | 'dark'
+  theme:                 'auto',   // 'auto' | 'light' | 'dark'
 }
 
 function load() {

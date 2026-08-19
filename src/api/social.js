@@ -25,17 +25,19 @@
  */
 
 /**
- * Check Instagram username availability using web_profile_info API
+ * Check Instagram username availability using web_profile_info API + HTML fallback
  */
 async function checkInstagramAPI(username) {
   const clean = username.toLowerCase().replace(/[^a-z0-9._]/g, '').replace(/^@/, '')
   if (!clean) return { platform: 'instagram', username: clean, status: 'invalid', reliable: false }
 
+  // 1. Try web_profile_info endpoint with mandatory AJAX headers
   try {
     const res = await fetch(`/api/instagram/api/v1/users/web_profile_info/?username=${encodeURIComponent(clean)}`, {
       method: 'GET',
       headers: {
         'x-ig-app-id': '936619743392459',
+        'x-requested-with': 'XMLHttpRequest',
         'Accept': 'application/json, text/plain, */*',
         'Accept-Language': 'en-US,en;q=0.9',
       },
@@ -52,15 +54,41 @@ async function checkInstagramAPI(username) {
     if (res.status === 404) {
       return { platform: 'instagram', username: clean, status: 'free', reliable: true }
     }
+  } catch {}
 
-    if (res.status === 429) {
-      return { platform: 'instagram', username: clean, status: 'unknown', reliable: false }
+  // 2. Fallback: Direct HTML profile page check
+  try {
+    const res = await fetch(`/api/instagram/${encodeURIComponent(clean)}/`, {
+      method: 'GET',
+      headers: {
+        'Accept': 'text/html,application/xhtml+xml,*/*',
+        'Accept-Language': 'en-US,en;q=0.9',
+      },
+    })
+
+    if (res.status === 404) {
+      return { platform: 'instagram', username: clean, status: 'free', reliable: true }
     }
 
-    return { platform: 'instagram', username: clean, status: 'unknown', reliable: false }
-  } catch {
-    return { platform: 'instagram', username: clean, status: 'error', reliable: false }
-  }
+    if (res.ok) {
+      const html = await res.text()
+      const is404 = html.includes('Page Not Found') ||
+                    html.includes("Sorry, this page isn't available") ||
+                    html.includes('The link you followed may be broken')
+      if (is404) {
+        return { platform: 'instagram', username: clean, status: 'free', reliable: true }
+      }
+
+      const hasUserMeta = html.includes(`@${clean}`) ||
+                          html.includes(`instagram.com/${clean}`) ||
+                          html.includes('og:title')
+      if (hasUserMeta) {
+        return { platform: 'instagram', username: clean, status: 'taken', reliable: true }
+      }
+    }
+  } catch {}
+
+  return { platform: 'instagram', username: clean, status: 'unknown', reliable: false }
 }
 
 /**
@@ -135,6 +163,8 @@ async function checkTwitterHandle(username) {
   }
 }
 
+const socialCache = new Map()
+
 /**
  * Check a single username on a single platform.
  * @param {'instagram'|'youtube'|'twitter'|'facebook'} platform
@@ -142,13 +172,25 @@ async function checkTwitterHandle(username) {
  * @returns {Promise<SocialResult>}
  */
 export async function checkSocial(platform, username) {
-  if (platform === 'instagram') return checkInstagramAPI(username)
-  if (platform === 'youtube')   return checkYouTubeHandle(username)
-  if (platform === 'twitter')   return checkTwitterHandle(username)
-  if (platform === 'facebook') {
-    return { platform: 'facebook', username, status: 'unknown', reliable: false }
+  const cacheKey = `${platform}:${username.toLowerCase()}`
+  if (socialCache.has(cacheKey)) {
+    return socialCache.get(cacheKey)
   }
-  return { platform, username, status: 'unsupported', reliable: false }
+
+  let result
+  if (platform === 'instagram') result = await checkInstagramAPI(username)
+  else if (platform === 'youtube') result = await checkYouTubeHandle(username)
+  else if (platform === 'twitter') result = await checkTwitterHandle(username)
+  else if (platform === 'facebook') {
+    result = { platform: 'facebook', username, status: 'unknown', reliable: false }
+  } else {
+    result = { platform, username, status: 'unsupported', reliable: false }
+  }
+
+  if (result && result.status !== 'error') {
+    socialCache.set(cacheKey, result)
+  }
+  return result
 }
 
 /**
@@ -172,8 +214,8 @@ export async function checkSocialBatch(usernames, platforms, onProgress) {
     }
   }
 
-  const CONCURRENCY = 4
-  const DELAY       = 250
+  const CONCURRENCY = 10
+  const DELAY       = 30
   let done = 0
 
   for (let i = 0; i < tasks.length; i += CONCURRENCY) {

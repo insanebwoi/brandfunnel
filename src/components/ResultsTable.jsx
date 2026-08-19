@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import Papa from 'papaparse'
+import { BrandReportModal } from './BrandReportModal.jsx'
 import {
   CheckIcon,
   CrossIcon,
@@ -11,6 +13,9 @@ import {
   FacebookIcon,
   AlertCircleIcon,
   ZapIcon,
+  CopyIcon,
+  GlobeIcon,
+  RefreshIcon,
 } from './Icons.jsx'
 
 function getPlatformIcon(platform, size = 13) {
@@ -211,19 +216,88 @@ export default function ResultsTable({
   tlds,
   activeSocials,
   stages,
+  pipelineStatus,
   fallbackNotice,
   stopMessage,
   filterAvailable,
-  onFilterChange
+  onFilterChange,
+  onNewSearch,
 }) {
+  const [toastMessage, setToastMessage] = useState(null)
+  const [selectedReportRow, setSelectedReportRow] = useState(null)
+
+  const isPipelineComplete = pipelineStatus === 'done'
   const visible = filterAvailable ? rows.filter(r => r.isAlive || r.hasAny) : rows
-  const aliveRows = rows.filter(r => r.isAlive)
+  const aliveRows = isPipelineComplete ? rows.filter(r => r.isAlive) : []
+
+  // Extract winning bare brand names (without TLD extensions or @ symbol)
+  const freeBrandNames = [...new Set(
+    rows
+      .filter(row => row.isAlive || row.hasAny)
+      .map(row => row.baseName)
+  )]
+
+  // Extract available domain names (e.g. brand.com, brand.io)
+  const availableDomains = rows.flatMap(row => {
+    return Object.entries(row.domainCols || {})
+      .filter(([, res]) => res?.ok && res?.available)
+      .map(([tld]) => `${row.baseName}${tld}`)
+  })
+
+  // Extract available Instagram usernames
+  const availableInstaHandles = rows
+    .filter(row => row.social?.instagram?.status === 'free')
+    .map(row => `@${row.baseName}`)
 
   // Map of stageId -> status
   const stageMap = (stages || []).reduce((acc, s) => {
     acc[s.id] = s.status
     return acc
   }, {})
+
+  function showToast(msg) {
+    setToastMessage(msg)
+    setTimeout(() => setToastMessage(null), 3000)
+  }
+
+  function copyFreeBrandNames() {
+    if (!freeBrandNames.length) {
+      showToast('No winning brand names available to copy.')
+      return
+    }
+    const text = freeBrandNames.join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(`Copied ${freeBrandNames.length} clean brand name${freeBrandNames.length > 1 ? 's' : ''}!`)
+    }).catch(() => {
+      showToast('Failed to copy to clipboard.')
+    })
+  }
+
+  function copyAvailableDomains() {
+    if (!availableDomains.length) {
+      showToast('No free domains available to copy.')
+      return
+    }
+    const text = availableDomains.join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(`Copied ${availableDomains.length} free domain name${availableDomains.length > 1 ? 's' : ''}!`)
+    }).catch(() => {
+      showToast('Failed to copy to clipboard.')
+    })
+  }
+
+  function copyAvailableInsta() {
+    if (!availableInstaHandles.length) {
+      showToast('No free Instagram handles available to copy.')
+      return
+    }
+    const text = availableInstaHandles.join('\n')
+    navigator.clipboard.writeText(text).then(() => {
+      showToast(`Copied ${availableInstaHandles.length} free Instagram handle${availableInstaHandles.length > 1 ? 's' : ''}!`)
+    }).catch(() => {
+      showToast('Failed to copy to clipboard.')
+    })
+  }
 
   function exportCSV() {
     const data = rows.map(row => {
@@ -257,6 +331,14 @@ export default function ResultsTable({
 
   return (
     <>
+      {/* Toast Notification */}
+      {toastMessage && (
+        <div className="copy-toast-banner">
+          <CheckIcon size={14} style={{ color: 'var(--avail)', flexShrink: 0 }} />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Pipeline Stepper Visualizer */}
       <PipelineStepper stages={stages} />
 
@@ -296,6 +378,46 @@ export default function ResultsTable({
         </div>
         <div className="results-spacer" />
         <div className="results-actions">
+          {onNewSearch && (
+            <button
+              className="btn-copy-quick edit-names-btn"
+              onClick={onNewSearch}
+              title="Edit names list or change search options"
+            >
+              <RefreshIcon size={12} />
+              <span>Edit Names</span>
+            </button>
+          )}
+          <button
+            className="btn-copy-quick names-only"
+            onClick={copyFreeBrandNames}
+            title="Copy bare winning brand names without TLD extensions or @ symbol"
+            disabled={!freeBrandNames.length}
+          >
+            <SparklesIcon size={12} />
+            <CopyIcon size={12} />
+            <span>Copy Names ({freeBrandNames.length})</span>
+          </button>
+          <button
+            className="btn-copy-quick"
+            onClick={copyAvailableDomains}
+            title="Copy all available domain names to clipboard"
+            disabled={!availableDomains.length}
+          >
+            <GlobeIcon size={12} />
+            <CopyIcon size={12} />
+            <span>Copy Domains ({availableDomains.length})</span>
+          </button>
+          <button
+            className="btn-copy-quick insta"
+            onClick={copyAvailableInsta}
+            title="Copy all available Instagram handles to clipboard"
+            disabled={!availableInstaHandles.length}
+          >
+            <InstagramIcon size={12} />
+            <CopyIcon size={12} />
+            <span>Copy Insta ({availableInstaHandles.length})</span>
+          </button>
           <button
             className={`filter-btn${filterAvailable ? ' active' : ''}`}
             onClick={() => onFilterChange(!filterAvailable)}
@@ -329,17 +451,29 @@ export default function ResultsTable({
           </thead>
           <tbody>
             {visible.map(row => {
-              const isAlive = row.isAlive
+              const isAllClear = isPipelineComplete && row.isAlive
+              const isRunning = pipelineStatus === 'running'
               return (
-                <tr key={row.baseName} className={isAlive ? 'row-alive' : 'row-eliminated'}>
+                <tr key={row.baseName} className={isAllClear ? 'row-alive' : 'row-eliminated'}>
                   <td>
                     <div className="td-inner">
                       <div className="name-status-row">
-                        <span className="td-name">{row.baseName}</span>
-                        {isAlive ? (
+                        <span
+                          className="td-name clickable-name"
+                          onClick={() => setSelectedReportRow(row)}
+                          title="Click to view detailed Brand Analysis Report"
+                        >
+                          {row.baseName}
+                        </span>
+                        {isAllClear ? (
                           <span className="badge-alive">
                             <SparklesIcon size={11} />
                             <span>ALL CLEAR</span>
+                          </span>
+                        ) : isRunning && row.isAlive ? (
+                          <span className="badge-alive pending-clear" style={{ background: 'var(--accent-bg)', borderColor: 'var(--accent-border)', color: 'var(--accent-2)' }}>
+                            <ZapIcon size={10} />
+                            <span>In Funnel…</span>
                           </span>
                         ) : (
                           <span className="badge-eliminated">
@@ -369,6 +503,17 @@ export default function ResultsTable({
           </tbody>
         </table>
       </div>
+
+      {/* Brand Name Analysis Report Modal */}
+      {selectedReportRow && (
+        <BrandReportModal
+          nameRow={selectedReportRow}
+          tlds={tlds}
+          activeSocials={activeSocials}
+          onClose={() => setSelectedReportRow(null)}
+        />
+      )}
     </>
   )
 }
+

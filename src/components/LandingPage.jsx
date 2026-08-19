@@ -1,4 +1,6 @@
 import { useState } from 'react'
+import { checkDomainViaDNS } from '../api/domain.js'
+import { checkSocial } from '../api/social.js'
 import {
   BrandLogo,
   BrandLogoSVG,
@@ -22,6 +24,8 @@ import {
   ChevronDownIcon,
   ExternalLinkIcon,
   ActivityIcon,
+  CopyIcon,
+  RefreshIcon,
 } from './Icons.jsx'
 import {
   ScrollProgressBar,
@@ -35,44 +39,115 @@ import { ArchitectureOrbit } from './ArchitectureOrbit.jsx'
 export default function LandingPage({ onLaunchTool, onOpenGuide }) {
   const [openFaq, setOpenFaq] = useState(0)
 
-  // Interactive Live Simulator State
-  const [simName, setSimName] = useState('novara')
+  // Interactive Live Simulator State (Single-name)
+  const [simInput, setSimInput] = useState('novara')
   const [simRunning, setSimRunning] = useState(false)
   const [simStage, setSimStage] = useState(4)
+
+  const [simResults, setSimResults] = useState({
+    domain: { available: true, label: 'Available (.com)' },
+    instagram: { status: 'free', label: 'Free Handle' },
+    youtube: { status: 'free', label: 'Free Channel' },
+    twitter: { status: 'free', label: 'All Clear' },
+  })
+
   const [terminalLog, setTerminalLog] = useState([
-    '[INIT] Cascade pipeline listening on port 3092...',
-    '[STAGE 1] Registry check: novara.com -> AVAILABLE ($11.99/yr)',
-    '[STAGE 2] Instagram web profile check: @novara -> FREE (HTTP 404)',
-    '[STAGE 3] YouTube channel check: /@novara -> FREE (HTTP 404)',
+    '[INIT] Authoritative DoH live DNS engine ready...',
+    '[STAGE 1] novara.com -> AVAILABLE (DNS verified)',
+    '[STAGE 2] Instagram @novara -> FREE (HTTP 404)',
+    '[STAGE 3] YouTube /@novara -> FREE (HTTP 404)',
     '[STAGE 4] Identity confirmed -> ALL CLEAR (Survivor Ready)',
   ])
 
-  const runSimulation = () => {
+  const runLiveSimulation = async () => {
     if (simRunning) return
+
+    const targetName = simInput.trim().toLowerCase().replace(/[^a-z0-9]/g, '')
+    if (!targetName) return
+
     setSimRunning(true)
+    setSimStage(0)
+    setTerminalLog([`[INIT] Starting live protocol cascade for single candidate name "${targetName}"...`])
+
+    // Stage 1: Live Domain Check
     setSimStage(1)
-    setTerminalLog([`[INIT] Starting cascade for: "${simName || 'brand'}"`])
+    setTerminalLog(prev => [...prev, `[STAGE 1] Querying Authoritative DoH DNS for ${targetName}.com...`])
+    const domainRes = await checkDomainViaDNS(`${targetName}.com`).catch(() => ({ available: false }))
 
-    setTimeout(() => {
-      setSimStage(1)
-      setTerminalLog(prev => [...prev, `[STAGE 1] Querying Authoritative DNS for ${simName || 'brand'}.com -> FREE`])
-    }, 400)
+    setSimResults(prev => ({
+      ...prev,
+      domain: {
+        available: domainRes.available,
+        label: domainRes.available ? 'Available (.com)' : 'Taken (.com)',
+      },
+    }))
 
-    setTimeout(() => {
-      setSimStage(2)
-      setTerminalLog(prev => [...prev, `[STAGE 2] Querying Instagram web_profile_info for @${simName || 'brand'} -> FREE (404)`])
-    }, 900)
+    setTerminalLog(prev => [
+      ...prev,
+      `[STAGE 1 RESULT] ${targetName}.com -> ${domainRes.available ? 'AVAILABLE (DNS confirmed)' : 'TAKEN'}`,
+    ])
 
-    setTimeout(() => {
-      setSimStage(3)
-      setTerminalLog(prev => [...prev, `[STAGE 3] Querying YouTube @${simName || 'brand'} -> FREE (404)`])
-    }, 1400)
-
-    setTimeout(() => {
-      setSimStage(4)
-      setTerminalLog(prev => [...prev, `[STAGE 4] Twitter/X & Facebook verified -> ALL CLEAR (100% Identity Match)`])
+    if (!domainRes.available) {
+      setTerminalLog(prev => [...prev, `[EARLY STOP] ${targetName}.com is taken. Pruning downstream social queries.`])
       setSimRunning(false)
-    }, 1900)
+      return
+    }
+
+    // Stage 2: Live Instagram Check
+    setSimStage(2)
+    setTerminalLog(prev => [...prev, `[STAGE 2] Querying Instagram web_profile_info for @${targetName}...`])
+    const instaRes = await checkSocial('instagram', targetName).catch(() => ({ status: 'unknown' }))
+
+    const instaStatusLabel = instaRes.status === 'free' ? 'Free Handle' : instaRes.status === 'taken' ? 'Taken' : 'Unconfirmed'
+    setSimResults(prev => ({
+      ...prev,
+      instagram: { status: instaRes.status, label: instaStatusLabel },
+    }))
+
+    setTerminalLog(prev => [
+      ...prev,
+      `[STAGE 2 RESULT] @${targetName} on Instagram -> ${instaStatusLabel.toUpperCase()}`,
+    ])
+
+    // Stage 3: Live YouTube Check
+    setSimStage(3)
+    setTerminalLog(prev => [...prev, `[STAGE 3] Querying YouTube channel /@${targetName}...`])
+    const ytRes = await checkSocial('youtube', targetName).catch(() => ({ status: 'unknown' }))
+
+    const ytStatusLabel = ytRes.status === 'free' ? 'Free Channel' : ytRes.status === 'taken' ? 'Taken' : 'Unconfirmed'
+    setSimResults(prev => ({
+      ...prev,
+      youtube: { status: ytRes.status, label: ytStatusLabel },
+    }))
+
+    setTerminalLog(prev => [
+      ...prev,
+      `[STAGE 3 RESULT] /@${targetName} on YouTube -> ${ytStatusLabel.toUpperCase()}`,
+    ])
+
+    // Stage 4: Live Twitter & Final confirmation
+    setSimStage(4)
+    setTerminalLog(prev => [...prev, `[STAGE 4] Querying Twitter/X handle @${targetName}...`])
+    const twRes = await checkSocial('twitter', targetName).catch(() => ({ status: 'unknown' }))
+
+    const isAllClear = domainRes.available && (instaRes.status === 'free' || instaRes.status === 'unknown') && (ytRes.status === 'free' || ytRes.status === 'unknown')
+
+    setSimResults(prev => ({
+      ...prev,
+      twitter: { status: twRes.status, label: isAllClear ? 'All Clear' : 'Partial Match' },
+    }))
+
+    setTerminalLog(prev => [
+      ...prev,
+      `[STAGE 4 RESULT] Twitter/X @${targetName} -> ${(twRes.status || 'free').toUpperCase()}`,
+      `[COMPLETE] Cascade check finished -> ${isAllClear ? 'SURVIVOR READY (ALL CLEAR)' : 'CHECK COMPLETE'}`,
+    ])
+
+    setSimRunning(false)
+  }
+
+  const handleGotoTool = () => {
+    onLaunchTool?.(simInput)
   }
 
   const faqs = [
@@ -126,6 +201,8 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
     },
   ]
 
+  const firstToken = simInput.split(/[\n,]+/)[0]?.trim().toLowerCase().replace(/[^a-z0-9]/g, '') || 'novara'
+
   return (
     <div className="landing-container">
       {/* ── LASER SCROLL PROGRESS BAR ── */}
@@ -154,27 +231,26 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
 
         <RevealOnScroll delay={100}>
           <h1 className="hero-title">
-            Verify Domains &amp; Social Handles <br className="hero-br" />
-            <span className="text-gradient">In One Cascading Pipeline</span>
+            Check Your Brand Name <br className="hero-br" />
+            <span className="text-gradient">Before You Build Your Brand</span>
           </h1>
         </RevealOnScroll>
 
         <RevealOnScroll delay={150}>
           <p className="hero-desc">
-            Eliminate manual friction. Brand Funnel filters candidate names through an automated sequential funnel:
-            verifying domain registry availability first, then cascading surviving names across
-            Instagram, YouTube, Twitter/X, and Facebook in real-time.
+            Check a business or brand name across the signals that matter before you commit to it.
+            Research name availability, domains, trademarks, social handles, similarity, and brandability in one automated place.
           </p>
         </RevealOnScroll>
 
         <RevealOnScroll delay={200}>
           <div className="hero-actions">
-            <button className="btn-hero-primary" onClick={onLaunchTool}>
-              <span>Launch Brand Funnel</span>
+            <button className="btn-hero-primary" onClick={() => onLaunchTool?.()}>
+              <span>Check This Name</span>
               <ArrowRightIcon size={16} />
             </button>
             <button className="btn-hero-secondary" onClick={onOpenGuide}>
-              <span>View Architecture Guide</span>
+              <span>View Naming Methodology</span>
             </button>
           </div>
         </RevealOnScroll>
@@ -224,7 +300,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
               </div>
               <div className="preview-tag">
                 <ActivityIcon size={11} style={{ display: 'inline', marginRight: 4 }} />
-                Live Terminal
+                Single Name Check
               </div>
             </div>
 
@@ -234,23 +310,30 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                 <input
                   type="text"
                   className="sim-input"
-                  value={simName}
-                  onChange={(e) => setSimName(e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ''))}
-                  placeholder="enter a brand name..."
-                  maxLength={20}
-                  inputMode="text"
-                  autoCapitalize="none"
-                  autoCorrect="off"
+                  value={simInput}
+                  onChange={(e) => setSimInput(e.target.value.replace(/[\r\n,\s]+/g, ''))}
+                  placeholder="enter single candidate name (e.g. novara)..."
+                  onKeyDown={(e) => e.key === 'Enter' && runLiveSimulation()}
                 />
               </div>
-              <button
-                className="btn-sim-run"
-                onClick={runSimulation}
-                disabled={simRunning || !simName}
-              >
-                {simRunning ? <span className="spinner-mini" /> : <ZapIcon size={13} />}
-                <span>{simRunning ? 'Cascading...' : 'Test Funnel'}</span>
-              </button>
+              <div className="sim-actions-group">
+                <button
+                  className="btn-sim-run"
+                  onClick={runLiveSimulation}
+                  disabled={simRunning || !simInput.trim()}
+                >
+                  {simRunning ? <span className="spinner-mini" /> : <ZapIcon size={13} />}
+                  <span>{simRunning ? 'Cascading...' : 'Test Funnel'}</span>
+                </button>
+                <button
+                  className="btn-sim-run secondary-goto"
+                  onClick={handleGotoTool}
+                  title="Open full results dashboard in #tool"
+                >
+                  <span>Full Tool (#tool)</span>
+                  <ArrowRightIcon size={12} />
+                </button>
+              </div>
             </div>
 
             <div className="funnel-steps-visual">
@@ -260,14 +343,14 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                   <div className="funnel-step-info">
                     <div className="funnel-step-name">
                       <GlobeIcon size={14} style={{ color: 'var(--avail)' }} />
-                      <span>Domain Registry (.com / .io / .in)</span>
+                      <span>Domain Registry (.com / .io)</span>
                     </div>
-                    <div className="funnel-step-sub">Authoritative Live DNS Lookup</div>
+                    <div className="funnel-step-sub">Authoritative Live DoH Lookup</div>
                   </div>
                 </div>
-                <div className="funnel-step-status pass">
-                  <CheckIcon size={12} />
-                  <span>Available</span>
+                <div className={`funnel-step-status ${simResults.domain.available ? 'pass' : 'taken'}`}>
+                  {simResults.domain.available ? <CheckIcon size={12} /> : <CrossIcon size={10} />}
+                  <span>{simResults.domain.label}</span>
                 </div>
               </div>
 
@@ -281,14 +364,14 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                   <div className="funnel-step-info">
                     <div className="funnel-step-name">
                       <InstagramIcon size={14} style={{ color: '#E1306C' }} />
-                      <span>Instagram Handle (@{simName || 'brand'})</span>
+                      <span>Instagram Handle (@{firstToken})</span>
                     </div>
                     <div className="funnel-step-sub">Web Profile Info Verification</div>
                   </div>
                 </div>
-                <div className={`funnel-step-status ${simStage >= 2 ? 'pass' : 'pending'}`}>
-                  {simStage >= 2 ? <CheckIcon size={12} /> : null}
-                  <span>{simStage >= 2 ? 'Free Handle' : 'Queued'}</span>
+                <div className={`funnel-step-status ${simResults.instagram.status === 'free' ? 'pass' : simResults.instagram.status === 'taken' ? 'taken' : 'pending'}`}>
+                  {simResults.instagram.status === 'free' ? <CheckIcon size={12} /> : null}
+                  <span>{simResults.instagram.label}</span>
                 </div>
               </div>
 
@@ -302,14 +385,14 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                   <div className="funnel-step-info">
                     <div className="funnel-step-name">
                       <YouTubeIcon size={14} style={{ color: '#FF0000' }} />
-                      <span>YouTube Channel (/@{simName || 'brand'})</span>
+                      <span>YouTube Channel (/@{firstToken})</span>
                     </div>
                     <div className="funnel-step-sub">Authoritative Channel Handle Lookup</div>
                   </div>
                 </div>
-                <div className={`funnel-step-status ${simStage >= 3 ? 'pass' : 'pending'}`}>
-                  {simStage >= 3 ? <CheckIcon size={12} /> : null}
-                  <span>{simStage >= 3 ? 'Free Channel' : 'Queued'}</span>
+                <div className={`funnel-step-status ${simResults.youtube.status === 'free' ? 'pass' : simResults.youtube.status === 'taken' ? 'taken' : 'pending'}`}>
+                  {simResults.youtube.status === 'free' ? <CheckIcon size={12} /> : null}
+                  <span>{simResults.youtube.label}</span>
                 </div>
               </div>
 
@@ -330,7 +413,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
                 </div>
                 <div className={`funnel-step-status ${simStage >= 4 ? 'winner' : 'pending'}`}>
                   {simStage >= 4 ? <SparklesIcon size={12} /> : null}
-                  <span>{simStage >= 4 ? 'All Clear' : 'Queued'}</span>
+                  <span>{simStage >= 4 ? simResults.twitter.label : 'Queued'}</span>
                 </div>
               </div>
             </div>
@@ -616,7 +699,7 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
               No signup required. Paste your candidate names and run the cascading funnel right now.
             </p>
             <div className="cta-actions-row">
-              <button className="btn-hero-primary" onClick={onLaunchTool}>
+              <button className="btn-hero-primary" onClick={() => onLaunchTool?.()}>
                 <span>Launch Brand Funnel</span>
                 <ArrowRightIcon size={16} />
               </button>
@@ -627,40 +710,6 @@ export default function LandingPage({ onLaunchTool, onOpenGuide }) {
           </div>
         </RevealOnScroll>
       </section>
-
-      {/* ── MODERN FOOTER ── */}
-      <footer className="landing-footer">
-        <div className="footer-content">
-          <div className="footer-left">
-            <div className="footer-brand">
-              <div className="footer-logo-badge">
-                <BrandLogo size={18} />
-              </div>
-              <span className="footer-logo-text">Brand Funnel</span>
-            </div>
-            <span className="footer-copy">
-              Precision Domain &amp; Social Identity Intelligence. Client-side execution.
-            </span>
-          </div>
-
-          <div className="footer-links">
-            <button className="footer-link-btn" onClick={onLaunchTool}>
-              Brand Funnel Tool
-            </button>
-            <button className="footer-link-btn" onClick={onOpenGuide}>
-              API Setup Guide
-            </button>
-            <a
-              href="https://rdap.org"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="footer-link-btn"
-            >
-              ICANN RDAP Specs <ExternalLinkIcon size={11} style={{ display: 'inline', marginLeft: 2 }} />
-            </a>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }
