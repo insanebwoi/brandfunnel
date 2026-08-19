@@ -159,9 +159,10 @@ export default function App() {
   }, [state.status])
 
   function toggleTld(tld) {
-    const next = settings.tlds.includes(tld)
-      ? settings.tlds.filter(t => t !== tld)
-      : [...settings.tlds, tld]
+    const current = Array.isArray(settings?.tlds) ? settings.tlds : ['.com', '.net', '.in', '.io']
+    const next = current.includes(tld)
+      ? current.filter(t => t !== tld)
+      : [...current, tld]
     if (next.length === 0) return
     updateSettings({ tlds: next })
   }
@@ -170,7 +171,8 @@ export default function App() {
     if (state.status === 'running') return
     setFilter(false)
     setToolViewMode('results')
-    await run(input, settings.tlds, settings)
+    const safeTlds = Array.isArray(settings?.tlds) ? settings.tlds : ['.com', '.net', '.in', '.io']
+    await run(input, safeTlds, settings)
   }
 
   function handleReset() {
@@ -186,12 +188,13 @@ export default function App() {
     updateSettings({ theme: next })
   }
 
-  const isRunning  = state.status === 'running'
-  const isDone     = state.status === 'done' || state.status === 'stopped'
-  const isError    = state.status === 'error'
-  const inputEmpty = !input.trim()
+  const isRunning   = state.status === 'running'
+  const isDone      = state.status === 'done' || state.status === 'stopped'
+  const isError     = state.status === 'error'
+  const inputEmpty  = !input.trim()
+  const currentTlds = Array.isArray(settings?.tlds) ? settings.tlds : ['.com', '.net', '.in', '.io']
 
-  const activeSocials = SOCIAL_PLATFORMS.filter(p => settings[p.key])
+  const activeSocials = SOCIAL_PLATFORMS.filter(p => !!settings?.[p.key])
   const resultCount   = state.rows?.length ?? 0
   const aliveCount    = state.rows?.filter(r => r.isAlive).length ?? 0
 
@@ -258,7 +261,7 @@ export default function App() {
           <div className="active-options-preview">
             <div className="preview-chip-group">
               <span className="preview-group-label">TLDs:</span>
-              {settings.tlds.map(tld => (
+              {currentTlds.map(tld => (
                 <span key={tld} className="preview-chip tld">
                   {tld}
                 </span>
@@ -289,7 +292,7 @@ export default function App() {
                 {ALL_TLDS.map(({ tld }) => (
                   <button
                     key={tld}
-                    className={`tld-btn${settings.tlds.includes(tld) ? ' selected' : ''}`}
+                    className={`tld-btn${currentTlds.includes(tld) ? ' selected' : ''}`}
                     onClick={() => toggleTld(tld)}
                     disabled={isRunning}
                   >
@@ -433,7 +436,7 @@ export default function App() {
         <div className="active-options-preview">
           <div className="preview-chip-group">
             <span className="preview-group-label">TLDs:</span>
-            {settings.tlds.map(tld => (
+            {currentTlds.map(tld => (
               <span key={tld} className="preview-chip tld">
                 {tld}
               </span>
@@ -464,7 +467,7 @@ export default function App() {
               {ALL_TLDS.map(({ tld }) => (
                 <button
                   key={tld}
-                  className={`tld-btn${settings.tlds.includes(tld) ? ' selected' : ''}`}
+                  className={`tld-btn${currentTlds.includes(tld) ? ' selected' : ''}`}
                   onClick={() => toggleTld(tld)}
                   disabled={isRunning}
                 >
