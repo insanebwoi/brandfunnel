@@ -230,12 +230,12 @@ export default function ResultsTable({
   const visible = filterAvailable ? rows.filter(r => r.isAlive || r.hasAny) : rows
   const aliveRows = isPipelineComplete ? rows.filter(r => r.isAlive) : []
 
-  // Extract winning bare brand names (without TLD extensions or @ symbol)
-  const freeBrandNames = [...new Set(
+  // Extract winning bare brand names (strictly 100% passed survivors when pipeline is complete)
+  const freeBrandNames = isPipelineComplete ? [...new Set(
     rows
-      .filter(row => row.isAlive || row.hasAny)
+      .filter(row => row.isAlive)
       .map(row => row.baseName)
-  )]
+  )] : []
 
   // Extract available domain names (e.g. brand.com, brand.io)
   const availableDomains = rows.flatMap(row => {
@@ -388,16 +388,17 @@ export default function ResultsTable({
               <span>Edit Names</span>
             </button>
           )}
-          <button
-            className="btn-copy-quick names-only"
-            onClick={copyFreeBrandNames}
-            title="Copy bare winning brand names without TLD extensions or @ symbol"
-            disabled={!freeBrandNames.length}
-          >
-            <SparklesIcon size={12} />
-            <CopyIcon size={12} />
-            <span>Copy Names ({freeBrandNames.length})</span>
-          </button>
+          {freeBrandNames.length > 0 && (
+            <button
+              className="btn-copy-quick names-only"
+              onClick={copyFreeBrandNames}
+              title="Copy bare 100% passed survivor brand names without TLD extensions or @ symbol"
+            >
+              <SparklesIcon size={12} />
+              <CopyIcon size={12} />
+              <span>Copy Names ({freeBrandNames.length})</span>
+            </button>
+          )}
           <button
             className="btn-copy-quick"
             onClick={copyAvailableDomains}
